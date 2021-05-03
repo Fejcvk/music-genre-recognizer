@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
+from sklearn import svm
 
 from dataset.dataprovider import DataProvider
 
@@ -31,17 +32,17 @@ class Predictor:
         self.X = scaler.fit_transform(np.array(dataset.iloc[:, :-1], dtype=float))
         print(self.X[10])
 
-    def train_ffnn(self, epochs: int, batch_count: int = 200, dropout: bool = False):
-        X_train, X_test, Y_train, Y_test = train_test_split(self.X, self.Y, test_size=.2)
-        print(X_train.shape)
-        print(Y_train.shape)
-        batch_size = int(X_train.shape[0] / batch_count)
+    def train_ffnn(self, epochs: int, x_train: np.ndarray, y_train: np.ndarray, batch_count: int = 200,
+                   dropout: bool = False, x_test=None, y_test=None):
+        print(x_train.shape)
+        print(y_train.shape)
+        batch_size = int(x_train.shape[0] / batch_count)
 
         # Simple FFNN
         # 3 hidden layers with relu activation + output layer with softmax activation
         ffnn = keras.models.Sequential()
         if dropout:
-            ffnn.add(layers.Dropout(.3, input_shape=(X_train.shape[1],)))
+            ffnn.add(layers.Dropout(.3, input_shape=(x_train.shape[1],)))
         ffnn.add(layers.Dense(256, activation='relu'))
         ffnn.add(layers.Dense(128, activation='relu'))
         ffnn.add(layers.Dense(128, activation='relu'))
@@ -53,11 +54,22 @@ class Predictor:
                      loss='categorical_crossentropy',
                      metrics=['accuracy'])
 
-        self.history = ffnn.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_test, Y_test))
+        self.history = ffnn.fit(x_train, y_train, epochs=epochs, batch_size=batch_size,
+                                validation_data=(x_test, y_test))
         self.model = ffnn
+
+    def train_svm(self, gamma: float, C: float, x_train: np.ndarray, y_train: np.ndarray):
+        model = svm.SVC(gamma=gamma, C=C)
+        y_train = self.flatten_labeles_vector(y_train)
+        model.fit(x_train, y_train)
+        self.model = model
 
     def predict(self, X, Y):
         return self.model.evaluate(X, Y)
+
+    def flatten_labeles_vector(self, labels_vector:np.ndarray) -> np.ndarray:
+        new_labels = np.zeros((labels_vector.shape[0],1))
+
 
     def visualize(self, model_name: str):
         plt.title(f"Train accuracy for {self.dataset.shape[0]} data for {model_name}")
@@ -96,6 +108,7 @@ dataset_provider = DataProvider(
 
 predictor = Predictor(dataset=dataset_provider.get_or_create_dataset())
 predictor.process_data()
-predictor.train_ffnn(epochs=300, dropout=True)
-predictor.visualize(model_name='FFNN'
-                    )
+X_train, X_test, Y_train, Y_test = train_test_split(predictor.X, predictor.Y, test_size=.2)
+# predictor.train_ffnn(epochs=300, x_train=X_train, y_train=Y_train, dropout=True, x_test=X_test, y_test=Y_test)
+# predictor.visualize(model_name='FFNN')
+predictor.train_svm(gamma=0.0001, C=100., x_train=X_train, y_train=Y_train)
