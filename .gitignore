@@ -1,4 +1,5 @@
 venv
-data
+input
 .idea
 **/__pycache__
+output
