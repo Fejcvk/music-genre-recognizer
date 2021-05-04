@@ -6,7 +6,7 @@
 * Check accuracy for every class separately
 * Add new classification methods
     * RNN []
-    * SVN []
+    * SVM [X]
     * Random Forest []
     * Modificaiton like CNN []
 
