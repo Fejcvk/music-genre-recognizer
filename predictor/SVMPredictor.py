@@ -1,8 +1,12 @@
+import pathlib
+from datetime import datetime
+
 from sklearn import svm
 import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.svm import SVC
+import joblib
 
 from predictor.BasePredictor import BasePredictor, seed_all, dataset_provider
 
@@ -32,15 +36,24 @@ class SVMPredictor(BasePredictor):
     def visualize(self, *args):
         pass
 
+    def save(self, path: str):
+        pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+        joblib.dump(self.model, path+'/saved_model.joblib')
+
+    def load(self, path: str):
+        self.model = joblib.load(path+'/saved_model.joblib')
+
 
 SEED = 51
 seed_all(SEED=SEED)
 
-predictor = SVMPredictor(dataset=dataset_provider.get_or_create_dataset())
-predictor.process_data()
+predictor = SVMPredictor(dataset_provider)
 
 # Optimal hyperparameters C=10 gamma=0.1 found by gridsearch
-X_train, X_test, Y_train, Y_test = train_test_split(predictor.X, predictor.dataset.label, test_size=.2)
-predictor.train_svm(gamma=0.1, C=10, kernel="rbf", random_state=SEED, x_train=X_train, y_train=Y_train)
+X_train, X_test, Y_train, Y_test = train_test_split(predictor.X, predictor.dataset.label.to_numpy(), test_size=.2)
+# predictor.grid_search_for_svm(x_train=X_train, x_test= X_test, y_train= Y_train, y_test= Y_test)
+# predictor.train(gamma=0.1, C=10, kernel="rbf", random_state=SEED, x_train=X_train, y_train=Y_train)
+# predictor.save(path=f'../models/svm/model-{datetime.now()}')
+predictor.load('../models/svm/model-2021-05-06 21:19:29.576959')
 print(f"SVN accuracy = {predictor.model.score(X_test, Y_test)}")
 print(classification_report(y_pred=predictor.model.predict(X_test), y_true=Y_test))

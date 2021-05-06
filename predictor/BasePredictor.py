@@ -7,7 +7,7 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
 
-from dataset.dataprovider import DataProvider
+from dataset_provider.DatasetProvider import DataProvider
 
 
 def seed_all(SEED: int):
@@ -32,13 +32,19 @@ def draw_plot(title_dict: {}, is_train:bool, x_label:str, y_label: str, data):
 
 
 class BasePredictor(ABC):
-    def __init__(self, dataset: pd.DataFrame):
-        self.dataset = dataset
+    def __init__(self, dataset_provider:DataProvider):
+        self.dataset_provider = dataset_provider
+        self.dataset = None
         self.X = None
         self.Y = None
         self.model = None
         self.history = None
         self.print = False
+        self.prepare()
+
+    def prepare(self):
+        self.dataset = self.dataset_provider.get_or_create_dataset()
+        self.process_data()
 
     def process_data(self):
         dataset = self.dataset
@@ -64,6 +70,12 @@ class BasePredictor(ABC):
         pass
 
     def visualize(self, *args):
+        pass
+
+    def save(self, *args):
+        pass
+
+    def load(self, *args):
         pass
 
 
