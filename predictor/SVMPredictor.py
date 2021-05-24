@@ -12,8 +12,13 @@ from predictor.BasePredictor import BasePredictor, seed_all, dataset_provider
 
 
 class SVMPredictor(BasePredictor):
-    def train(self, gamma: float, C: float, x_train: np.ndarray, y_train: np.ndarray, random_state: int,
-                  kernel: str):
+    def train(self,
+              gamma: float,
+              C: float,
+              x_train: np.ndarray,
+              y_train: np.ndarray,
+              random_state: int,
+              kernel: str):
         model = svm.SVC(C=C, gamma=gamma, kernel=kernel, random_state=random_state)
         model.fit(x_train, y_train)
         # scores = cross_validate(model,x_train,y_train,scoring='f1_macro',cv=10)
@@ -30,18 +35,15 @@ class SVMPredictor(BasePredictor):
         print(classification_report(y_test, grid_predictions))
         self.model = grid
 
-    def predict(self, X:np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         return self.model.predict(X)
-
-    def visualize(self, *args):
-        pass
 
     def save(self, path: str):
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
-        joblib.dump(self.model, path+'/saved_model.joblib')
+        joblib.dump(self.model, path + '/saved_model.joblib')
 
     def load(self, path: str):
-        self.model = joblib.load(path+'/saved_model.joblib')
+        self.model = joblib.load(path + '/saved_model.joblib')
 
 
 SEED = 51
@@ -54,6 +56,6 @@ X_train, X_test, Y_train, Y_test = train_test_split(predictor.X, predictor.datas
 # predictor.grid_search_for_svm(x_train=X_train, x_test= X_test, y_train= Y_train, y_test= Y_test)
 # predictor.train(gamma=0.1, C=10, kernel="rbf", random_state=SEED, x_train=X_train, y_train=Y_train)
 # predictor.save(path=f'../models/svm/model-{datetime.now()}')
-predictor.load('../models/svm/model-2021-05-06 21:19:29.576959')
+predictor.load('../models/svm/model-2021-05-06 21:19:29.576959-90%')
 print(f"SVN accuracy = {predictor.model.score(X_test, Y_test)}")
 print(classification_report(y_pred=predictor.model.predict(X_test), y_true=Y_test))

@@ -22,9 +22,9 @@ def draw_distribution_plot(labels):
     plt.show()
 
 
-def draw_plot(title_dict: {}, is_train:bool, x_label:str, y_label: str, data):
+def draw_plot(title_dict: {}, is_train:bool, x_label:str, y_label: str, data, metric:str):
     phase = 'Train' if is_train is True else 'Validation'
-    plt.title(f"{phase} accuracy for {title_dict['count']} data for {title_dict['model_type']}")
+    plt.title(f"{phase} {metric} for {title_dict['count']} data for {title_dict['model_type']}")
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.plot(data)
@@ -69,8 +69,14 @@ class BasePredictor(ABC):
     def predict(self, X):
         pass
 
-    def visualize(self, *args):
-        pass
+    def visualize(self, model_name: str):
+        title_dict = {'count': self.dataset.shape[0], 'model_type': model_name}
+        x_label = 'Iterations'
+        for metric in ['accuracy', 'loss']:
+            draw_plot(title_dict, is_train=True, x_label=x_label, y_label=metric, data=self.history.history[metric],
+                      metric=metric)
+            draw_plot(title_dict, is_train=False, x_label=x_label, y_label=metric,
+                      data=self.history.history['val_' + metric], metric=metric)
 
     def save(self, *args):
         pass
